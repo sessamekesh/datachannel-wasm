@@ -19,7 +19,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-(function() {
+(function () {
 	var WebSocket = {
 		$WEBSOCKET: {
 			map: {},
@@ -103,12 +103,20 @@
 			};
 		},
 
-		wsSendMessage: function(ws, pBuffer, size) {
+		wsSendMessage: function(ws, pBuffer, size, copyFirst) {
 			var webSocket = WEBSOCKET.map[ws];
 			if(webSocket.readyState != 1) return 0;
-			if(size >= 0) {
-				var heapBytes = new Uint8Array(Module['HEAPU8'].buffer, pBuffer, size);
-				webSocket.send(heapBytes);
+      if (size >= 0) {
+        if (copyFirst) {
+          // TODO (sessamekesh): Maintain a static buffer so that you don't have to create/free
+          // a new buffer each time you send a piece of data
+          var copiedBytes = new Uint8Array(size);
+          copiedBytes.set(Module['HEAPU8'].slice(pBuffer, pBuffer + size));
+          webSocket.send(copiedBytes);
+        } else {
+          var heapBytes = new Uint8Array(Module['HEAPU8'].buffer, pBuffer, size);
+          webSocket.send(heapBytes);
+        }
 				return size;
 			} else {
 				var str = UTF8ToString(pBuffer);

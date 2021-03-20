@@ -5,12 +5,17 @@ project(datachannel-wasm
 	LANGUAGES CXX)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
+	set(WEBSOCKET_COPY_MESSAGES "off" CACHE BOOL "Copy messages before sending them - required with builds using SharedArrayBuffer (multithreading)")
+
+	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/wasm/include/config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/include/config.h")
+
 	set(WASM_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm/src)
     set(DATACHANNELS_SRC
 		${WASM_SRC_DIR}/channel.cpp
 		${WASM_SRC_DIR}/datachannel.cpp
 		${WASM_SRC_DIR}/peerconnection.cpp
-		${WASM_SRC_DIR}/websocket.cpp)
+		${WASM_SRC_DIR}/websocket.cpp
+		"${CMAKE_CURRENT_BINARY_DIR}/include/config.h")
 
 	add_library(datachannel-wasm STATIC ${DATACHANNELS_SRC})
 	set_target_properties(datachannel-wasm PROPERTIES
@@ -21,6 +26,8 @@ if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 		${CMAKE_CURRENT_SOURCE_DIR}/wasm/include)
 	target_include_directories(datachannel-wasm PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/wasm/include/rtc)
+	target_include_directories(datachannel-wasm PRIVATE
+		${CMAKE_CURRENT_BINARY_DIR}/include)
 
 	set(WASM_OPTS
 		"SHELL:-s WASM=1"
